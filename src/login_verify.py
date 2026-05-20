@@ -18,8 +18,56 @@ _STEAM_CONFIG_SUBPATHS = (
 )
 
 
+def _expand_file_root_template(template: str, box: str) -> str:
+    """Expand Sandboxie FileRootPath template (mis. `%SystemDrive%\\Sandbox\\%USER%\\%SANDBOX%`)
+    menggantikan %USER% & %SANDBOX% lalu env vars Windows."""
+    user = os.environ.get("USERNAME", "")
+    text = template.replace("%USER%", user).replace("%SANDBOX%", box)
+    return os.path.expandvars(text)
+
+
+def _read_file_root_path_from_ini() -> str | None:
+    """Ambil FileRootPath dari Sandboxie.ini. Bisa di section box-spesifik
+    atau [GlobalSettings]. Return template string, atau None kalau tidak ada."""
+    ini_candidates = [
+        r"C:\Windows\Sandboxie.ini",
+        r"C:\ProgramData\Sandboxie\Sandboxie.ini",
+    ]
+    for p in ini_candidates:
+        if not os.path.isfile(p):
+            continue
+        try:
+            with open(p, "rb") as f:
+                raw = f.read()
+            if raw.startswith(b"\xff\xfe"):
+                text = raw.decode("utf-16")
+            elif raw.startswith(b"\xef\xbb\xbf"):
+                text = raw.decode("utf-8-sig")
+            else:
+                text = raw.decode("utf-8", errors="replace")
+        except OSError:
+            continue
+        for line in text.splitlines():
+            stripped = line.strip()
+            if stripped.lower().startswith("filerootpath="):
+                return stripped.split("=", 1)[1].strip()
+    return None
+
+
 def find_box_root(box: str) -> str | None:
-    """Cari folder root box di disk. Mengembalikan path absolut atau None."""
+    """Cari folder root box di disk.
+
+    Strategi:
+      1. Baca FileRootPath dari Sandboxie.ini, expand template.
+         Ini yang Sandboxie sendiri pakai, jadi paling akurat.
+      2. Fallback ke path default umum (kalau .ini tidak punya entri).
+    """
+    template = _read_file_root_path_from_ini()
+    if template:
+        candidate = _expand_file_root_template(template, box)
+        if os.path.isdir(candidate):
+            return candidate
+
     user = os.environ.get("USERNAME", "")
     candidates = [
         rf"C:\Sandbox\{user}\{box}",

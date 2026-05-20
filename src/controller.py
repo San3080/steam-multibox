@@ -175,10 +175,13 @@ class Controller:
             return "stopped", ""
         filled = False           # form login hanya boleh diisi SEKALI per attempt
         picker_clicked = False   # tombol + cukup diklik sekali
+        # Lacak elapsed nyata sejak launch agar snapshot bisa pakai heuristik
+        # "Steam sudah lama jalan tanpa error → probably healthy".
+        elapsed = float(self.config.retry_check_delay)
         for _ in range(_MAX_POLLS_PER_ATTEMPT):
             if self._stop_event.is_set():
                 return "stopped", ""
-            state = self.driver.poll(box, self.config.retry_check_delay,
+            state = self.driver.poll(box, elapsed,
                                      expected_username=account.username)
             self._set_status(account.username, state)
 
@@ -207,6 +210,7 @@ class Controller:
             # WAITING_2FA / LAUNCHING / UNKNOWN -> just keep watching
             if self._wait(self.config.poll_interval):
                 return "stopped", ""
+            elapsed += float(self.config.poll_interval)
         return "stuck", "polling habis tanpa keadaan terminal"
 
     def _check_login_match(self, account, box) -> str:

@@ -155,12 +155,32 @@ def snapshot_box(box: str, elapsed: float, debug_log=None,
     if any(m in texts for m in login_fail_markers):
         snap.login_failed = True
 
-    if "retry" in texts or "could not connect" in texts:
+    if ("retry" in texts or "could not connect" in texts
+            or "steam service error" in texts):
         snap.retry_error = True
 
     # Healthy hanya kalau ada penanda kuat pasca-login.
-    healthy_markers = ("library", "store page", "friends list", "your library")
+    # Catatan: title window Steam SELALU "Steam" bahkan setelah login, dan
+    # Chromium tidak expose content via UIA, jadi marker via title saja tidak
+    # cukup. Pakai daftar penanda yang lebih luas + heuristik "tidak ada
+    # tanda picker/login form berarti probably already logged in".
+    healthy_markers = ("library", "store page", "friends list", "your library",
+                       "store", "community", "now playing")
     if any(m in texts for m in healthy_markers) and not snap.login_form:
+        snap.main_window = True
+    # Heuristik tambahan: kalau "Steam" SEDANG terbuka tapi tidak ada satupun
+    # indikator state-transisi (form/picker/2FA/retry/error), dan elapsed sudah
+    # cukup lama (proses Steam stabil), anggap healthy. Ini buat handle kasus
+    # di mana UI Chromium tidak expose content tapi Steam memang sudah login.
+    has_steam_window = any("steam" == t.strip().lower() or
+                            "steam" in t.lower() and len(t) < 30
+                            for t in analyzed)
+    no_state_marker = not any([snap.login_form, snap.account_picker,
+                                snap.guard_prompt, snap.retry_error,
+                                snap.login_failed])
+    if has_steam_window and no_state_marker and elapsed >= 30:
+        # Asumsi optimistik: kalau Steam jendela ada, tidak ada error, dan
+        # sudah > 30 detik sejak launch → probably logged in.
         snap.main_window = True
 
     if not any([snap.main_window, snap.login_form, snap.account_picker,
