@@ -217,3 +217,33 @@ def test_set_global_uses_globalsettings_section(monkeypatch):
         check=True)
 
 
+def test_block_host_steam_config_appends_closedfilepath(monkeypatch):
+    """block_host_steam_config harus tambah ClosedFilePath untuk loginusers.vdf,
+    config.vdf, dan ssfn* di folder host Steam."""
+    sb = make()
+    calls = []
+    def fake_run(cmd, **kw):
+        calls.append(list(cmd))
+        class R: returncode = 0
+        return R()
+    monkeypatch.setattr("src.sandboxie.subprocess.run", fake_run)
+    sb.block_host_steam_config("Steam_user1", r"D:\Steam\steam.exe")
+    # tiap call adalah append ClosedFilePath ke box Steam_user1
+    for c in calls:
+        assert c[1] == "append"
+        assert c[2] == "Steam_user1"
+        assert c[3] == "ClosedFilePath"
+    paths = [c[4] for c in calls]
+    assert any("loginusers.vdf" in p for p in paths)
+    assert any("config.vdf" in p for p in paths)
+    assert any("ssfn" in p for p in paths)
+
+
+def test_block_host_steam_config_skips_when_steam_exe_empty(monkeypatch):
+    sb = make()
+    run = MagicMock()
+    monkeypatch.setattr("src.sandboxie.subprocess.run", run)
+    sb.block_host_steam_config("Steam_user1", "")
+    run.assert_not_called()
+
+

@@ -85,6 +85,30 @@ class Sandboxie:
                 # best-effort; jangan gagalkan create box gara-gara satu pesan
                 pass
 
+    def block_host_steam_config(self, box: str, steam_exe: str) -> None:
+        """Block akses box ke file Steam config di HOST agar tidak mewarisi akun.
+
+        Tanpa ini, Sandboxie copy-on-read menyalin loginusers.vdf & config.vdf
+        host ke box pada read pertama, sehingga picker "Who's playing?" muncul
+        dengan akun host bahkan setelah kita wipe sesi. ClosedFilePath memberi
+        tahu Sandboxie untuk MENOLAK akses ke path host dari dalam box; Steam
+        kemudian start dengan state benar-benar nol.
+        """
+        if not steam_exe:
+            return
+        steam_dir = os.path.dirname(steam_exe)
+        host_files = [
+            os.path.join(steam_dir, "config", "loginusers.vdf"),
+            os.path.join(steam_dir, "config", "config.vdf"),
+        ]
+        # ssfn* token files juga inherited; pakai wildcard
+        host_files.append(os.path.join(steam_dir, "ssfn*"))
+        for path in host_files:
+            try:
+                self.append_setting(box, "ClosedFilePath", path)
+            except subprocess.CalledProcessError:
+                pass
+
     def delete_box(self, box: str) -> None:
         """Hapus box: terminate, hapus isi, hapus section dari Sandboxie.ini.
 

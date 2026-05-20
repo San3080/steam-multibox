@@ -31,6 +31,9 @@ class SteamBoxDriver:
 
     def ensure_box(self, box):
         self.sandboxie.create_box(box)
+        # Cegah Sandboxie copy-on-read file Steam config dari host (mencegah
+        # akun host bocor ke box yang membuat picker "Who's playing?" muncul).
+        self.sandboxie.block_host_steam_config(box, self.config.steam_exe)
 
     def launch(self, account, box):
         """Launch Steam di box.
@@ -58,11 +61,11 @@ class SteamBoxDriver:
         """
         self.sandboxie.graceful_shutdown_steam(box, self.config.steam_exe)
 
-    def click_add(self):
-        steam_ui.click_add_account()
+    def click_add(self) -> bool:
+        return bool(steam_ui.click_add_account())
 
-    def fill_login(self, account):
-        steam_ui.fill_login_form(account.username, account.password)
+    def fill_login(self, account) -> bool:
+        return bool(steam_ui.fill_login_form(account.username, account.password))
 
     def poll(self, box, elapsed, expected_username=None):
         snap = steam_ui.snapshot_box(
@@ -186,11 +189,21 @@ class Controller:
             if state in (BoxState.STUCK_RETRY, BoxState.STUCK_SPLASH):
                 return "stuck", state.value
             if state == BoxState.ACCOUNT_PICKER and not picker_clicked:
-                self.driver.click_add()
-                picker_clicked = True
+                if self.driver.click_add():
+                    picker_clicked = True
+                # gagal klik + → biarkan, akan dicoba di poll berikutnya
             elif state == BoxState.LOGIN_FORM and not filled:
-                self.driver.fill_login(account)
-                filled = True
+                if self.driver.fill_login(account):
+                    filled = True
+                else:
+                    # Jendela "Sign in to Steam" tapi TIDAK ada Edit field —
+                    # kemungkinan ini sebenarnya account picker (title-nya sama
+                    # di Sandboxie Plus). Coba klik "+" agar masuk ke form login.
+                    self.log.log("form login terdeteksi tapi field tidak "
+                                 "ada; mungkin picker — klik '+'",
+                                 account.username, "info")
+                    if self.driver.click_add():
+                        picker_clicked = True
             # WAITING_2FA / LAUNCHING / UNKNOWN -> just keep watching
             if self._wait(self.config.poll_interval):
                 return "stopped", ""

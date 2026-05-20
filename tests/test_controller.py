@@ -26,9 +26,11 @@ class FakeDriver:
 
     def click_add(self):
         self.calls.append("click_add")
+        return True
 
     def fill_login(self, account):
         self.calls.append(f"fill:{account.username}")
+        return True
 
     def poll(self, box, elapsed, **_):
         return self.states_by_box[box].pop(0)
@@ -163,6 +165,24 @@ def test_account_picker_clicked_only_once_per_attempt():
     ok, _ = ctrl.process_account(Account("u1", "p1", 1))
     assert ok is True
     assert driver.calls.count("click_add") == 1
+
+
+def test_login_form_fill_failure_falls_back_to_click_add():
+    """LOGIN_FORM tapi fill_login return False (kemungkinan picker yang
+    title-nya sama 'Sign in to Steam') -> tool harus klik '+' sebagai gantinya."""
+    class FakeWithFailedFill(FakeDriver):
+        def fill_login(self, account):
+            self.calls.append(f"fill:{account.username}")
+            return False  # simulasi gagal: form tidak ada Edit field
+    driver = FakeWithFailedFill({"Steam_u1": [
+        BoxState.LOGIN_FORM,  # coba fill -> gagal -> click_add
+        BoxState.HEALTHY,
+    ]})
+    ctrl = make_controller(driver)
+    ok, _ = ctrl.process_account(Account("u1", "p1", 1))
+    assert ok is True
+    assert "fill:u1" in driver.calls
+    assert "click_add" in driver.calls
 
 
 def test_mismatch_triggers_wipe_and_retry(monkeypatch):
