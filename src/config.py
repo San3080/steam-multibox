@@ -17,7 +17,7 @@ class AppConfig:
     retry_check_delay: int = 25
     poll_interval: int = 5
     splash_timeout: int = 40
-    terminate_grace_seconds: int = 12
+    terminate_grace_seconds: int = 25
     # Discord webhook (opsional). Kosong = tidak ada notifikasi.
     discord_webhook_url: str = ""
 
@@ -41,8 +41,8 @@ def save_config(cfg: AppConfig, path: str) -> None:
 def validate_config(cfg: AppConfig) -> list[str]:
     """Kembalikan daftar pesan error. Kosong = valid."""
     errors: list[str] = []
-    if cfg.login_method not in ("cmdline", "ui"):
-        errors.append("login_method harus 'cmdline' atau 'ui'")
+    if cfg.login_method not in ("cmdline", "ui", "keyboard"):
+        errors.append("login_method harus 'cmdline', 'keyboard', atau 'ui'")
     if cfg.max_retries < 0:
         errors.append("max_retries tidak boleh negatif")
     if cfg.stagger_seconds < 0:

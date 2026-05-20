@@ -38,11 +38,18 @@ class SteamBoxDriver:
     def launch(self, account, box):
         """Launch Steam di box.
 
-        - login_method='cmdline': `steam.exe -login user pass` (fast, no token save)
-        - login_method='ui' (default): launch polos; tool akan UI-fill form dengan
-          Remember me dicentang -> Steam simpan encrypted token untuk auto-login.
+        login_method:
+          - 'cmdline' (default): `steam.exe -login user pass`. Cepat & andal,
+            tapi Steam TIDAK save ssfn token sehingga reopen box manual butuh
+            login ulang.
+          - 'keyboard': launch Steam polos -> tool kirim keystroke
+            user/pass/Tab/Space/Enter untuk centang Remember me lewat keyboard.
+            Best-effort; bisa miss kalau focus rebut oleh window lain.
+          - 'ui': eksperimen pywinauto.descendants pada Chromium. Tidak bekerja
+            di Steam modern (Chromium tidak expose ke UIA). Disisakan untuk
+            kompatibilitas; effectively sama dengan 'keyboard' untuk akhirnya.
         """
-        if self.config.login_method == "ui":
+        if self.config.login_method in ("ui", "keyboard"):
             self.sandboxie.launch(box, self.config.steam_exe)
         else:
             args = build_login_args(self.config.steam_exe,
@@ -65,6 +72,9 @@ class SteamBoxDriver:
         return bool(steam_ui.click_add_account())
 
     def fill_login(self, account) -> bool:
+        if self.config.login_method == "keyboard":
+            return bool(steam_ui.send_login_keystrokes(
+                account.username, account.password))
         return bool(steam_ui.fill_login_form(account.username, account.password))
 
     def poll(self, box, elapsed, expected_username=None):

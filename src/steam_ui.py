@@ -200,6 +200,69 @@ def click_add_account() -> bool:
         return False
 
 
+def send_login_keystrokes(username: str, password: str,
+                           focus_window_title: str = "Sign in to Steam") -> bool:
+    """Kirim keystroke login ke jendela Steam DI LUAR jalur pywinauto/Chromium.
+
+    Pendekatan: focus jendela "Sign in to Steam" via pywinauto (hanya untuk
+    fokus, bukan baca content), lalu ketik:
+
+        username  Tab  password  Tab  Space (centang Remember me)  Enter
+
+    Memakai keybd_event Win32 API langsung — bypass Chromium UI Automation
+    yang tidak mengexpose Edit control-nya. Ini cara yang sama dengan ketika
+    user mengetik manual: keystroke disampaikan ke focused window tanpa
+    perlu introspeksi DOM Chromium.
+    """
+    try:
+        desktop = _connect_desktop()
+        win = desktop.window(title_re=".*Sign in to Steam.*")
+        # Force fokus ke jendela login
+        win.set_focus()
+    except Exception:
+        return False
+
+    import time
+    try:
+        from pywinauto.keyboard import send_keys
+    except Exception:
+        return False
+
+    def _escape(s: str) -> str:
+        # pywinauto.send_keys treat {} () + ^ % ~ sebagai special; escape.
+        special = "{}()+^%~"
+        out = []
+        for c in s:
+            if c in special:
+                out.append("{" + c + "}")
+            else:
+                out.append(c)
+        return "".join(out)
+
+    try:
+        time.sleep(0.5)  # kasih waktu fokus
+        # Mulai dari field username (asumsi: cursor sudah ada di sana saat
+        # form pertama tampil; kalau tidak, satu Tab biasanya mengembalikan).
+        send_keys(_escape(username), with_spaces=True, pause=0.04)
+        time.sleep(0.3)
+        send_keys("{TAB}", pause=0.04)
+        time.sleep(0.3)
+        send_keys(_escape(password), with_spaces=True, pause=0.04)
+        time.sleep(0.3)
+        # Tab ke "Remember me" checkbox -> Space untuk centang
+        send_keys("{TAB}", pause=0.04)
+        time.sleep(0.3)
+        send_keys(" ", pause=0.04)  # space toggle checkbox
+        time.sleep(0.3)
+        # Tab ke "Sign in" button -> Enter
+        send_keys("{TAB}", pause=0.04)
+        time.sleep(0.2)
+        send_keys("{ENTER}", pause=0.04)
+        return True
+    except Exception:
+        return False
+
+
 def fill_login_form(username: str, password: str) -> bool:
     """Isi form 'Sign in to Steam' DENGAN 'Remember me' tercentang lalu submit.
 
