@@ -11,7 +11,7 @@ class AppConfig:
     accounts_file: str = "data/accounts.txt"
     box_prefix: str = "Steam_"
     stagger_seconds: int = 8
-    login_method: str = "ui"
+    login_method: str = "cmdline"
     auto_terminate_on_success: bool = False
     max_retries: int = 3
     retry_check_delay: int = 25

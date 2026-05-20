@@ -73,6 +73,9 @@ class MainWindow(ctk.CTk):
                       command=self._on_open_ui).pack(fill="x", pady=4)
         ctk.CTkButton(actions, text="Hapus Box Terpilih", fg_color="#5a2a28",
                       command=self._on_delete).pack(fill="x", pady=4)
+        ctk.CTkButton(actions, text="Reset Semua Box", fg_color="#5a2a28",
+                      hover_color="#743532",
+                      command=self._on_reset_all).pack(fill="x", pady=4)
 
         self.auto_terminate = ctk.BooleanVar(
             value=self.config_obj.auto_terminate_on_success)
@@ -130,14 +133,15 @@ class MainWindow(ctk.CTk):
             self.config_obj.accounts_file = "data/accounts.txt"
             save_config(self.config_obj, self.config_path)
 
-        # Migrasi: kalau config lama masih login_method='cmdline' (default lama),
-        # alihkan ke 'ui' supaya Remember me bisa di-centang dan token tersimpan.
-        if self.config_obj.login_method == "cmdline":
+        # Migrasi: kalau config lama pakai 'ui' (eksperimen yang gagal di
+        # Steam Chromium client), kembalikan ke 'cmdline'. Karena akses ke
+        # host vdf sudah di-block via ClosedFilePath, -login sekarang langsung
+        # bekerja tanpa picker muncul.
+        if self.config_obj.login_method == "ui":
             self.logbus.log(
-                "login_method 'cmdline' dialihkan ke 'ui' untuk auto-login "
-                "yang persisten. Buka Pengaturan kalau mau kembali ke cmdline.",
-                "", "info")
-            self.config_obj.login_method = "ui"
+                "login_method 'ui' dialihkan ke 'cmdline' (lebih reliable "
+                "dengan ClosedFilePath aktif).", "", "info")
+            self.config_obj.login_method = "cmdline"
             save_config(self.config_obj, self.config_path)
 
         accounts, errors = read_accounts(self.config_obj.accounts_file)
@@ -302,6 +306,38 @@ class MainWindow(ctk.CTk):
             self.logbus.log(f"box {box} dihapus.", username, "ok")
         except Exception as e:
             self.logbus.log(f"gagal hapus box: {e}", username, "error")
+
+    def _on_reset_all(self):
+        """Hapus SEMUA box (per accounts.txt) sekaligus. Dipakai setelah update
+        besar yang mengubah cara box dibuat (mis. ClosedFilePath baru) supaya
+        box dibuat ulang fresh tanpa state warisan."""
+        if not self.config_obj.sandboxie_dir:
+            messagebox.showerror("Reset Semua", "Folder Sandboxie belum di-set.")
+            return
+        if not self._accounts:
+            messagebox.showinfo("Reset Semua", "Tidak ada akun di accounts.txt.")
+            return
+        if not messagebox.askyesno(
+                "Reset Semua Box",
+                f"Hapus {len(self._accounts)} box ({self.config_obj.box_prefix}*) "
+                "beserta SEMUA datanya?\n\n"
+                "Setelah ini kamu perlu Run lagi untuk membuat box baru."):
+            return
+        driver = SteamBoxDriver(self.config_obj, logbus=self.logbus)
+        success = 0
+        failed = 0
+        for acc in self._accounts:
+            box = self.config_obj.box_prefix + acc.username
+            try:
+                driver.sandboxie.delete_box(box)
+                self.logbus.log(f"box {box} dihapus.", acc.username, "ok")
+                success += 1
+            except Exception as e:
+                self.logbus.log(f"gagal hapus: {e}", acc.username, "error")
+                failed += 1
+        self.logbus.log(
+            f"Reset Semua Box selesai: {success} dihapus, {failed} gagal.",
+            "", "ok")
 
     def _on_toggle_autoterm(self):
         self.config_obj.auto_terminate_on_success = self.auto_terminate.get()

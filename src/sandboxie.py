@@ -86,24 +86,33 @@ class Sandboxie:
                 pass
 
     def block_host_steam_config(self, box: str, steam_exe: str) -> None:
-        """Block akses box ke file Steam config di HOST agar tidak mewarisi akun.
+        """Block akses box ke folder config Steam HOST agar tidak mewarisi akun.
 
-        Tanpa ini, Sandboxie copy-on-read menyalin loginusers.vdf & config.vdf
+        Tanpa ini, Sandboxie copy-on-read menyalin loginusers.vdf/config.vdf
         host ke box pada read pertama, sehingga picker "Who's playing?" muncul
-        dengan akun host bahkan setelah kita wipe sesi. ClosedFilePath memberi
-        tahu Sandboxie untuk MENOLAK akses ke path host dari dalam box; Steam
-        kemudian start dengan state benar-benar nol.
+        dengan akun host. Kita pakai DUA mekanisme bersamaan:
+
+        1. `ClosedFilePath` — block akses file spesifik (file kredensial).
+        2. `OpenFilePath` dengan path box-only — pastikan akses fallback ke
+           ruang box, bukan host.
+
+        Strategi ini memaksa Steam di box untuk start dengan loginusers.vdf
+        KOSONG -> tidak ada picker -> -login command-line langsung berhasil.
         """
         if not steam_exe:
             return
         steam_dir = os.path.dirname(steam_exe)
-        host_files = [
-            os.path.join(steam_dir, "config", "loginusers.vdf"),
-            os.path.join(steam_dir, "config", "config.vdf"),
+        config_dir = os.path.join(steam_dir, "config")
+        # File yang harus benar-benar di-block (inherited dari host)
+        blocked_paths = [
+            os.path.join(config_dir, "loginusers.vdf"),
+            os.path.join(config_dir, "config.vdf"),
+            os.path.join(config_dir, "DialogConfig.vdf"),
+            os.path.join(steam_dir, "ssfn*"),  # wildcard token files
+            # Sandboxie format: pakai prefix supaya berlaku rekursif kalau perlu
+            os.path.join(config_dir, "loginusers.vdf.tmp"),
         ]
-        # ssfn* token files juga inherited; pakai wildcard
-        host_files.append(os.path.join(steam_dir, "ssfn*"))
-        for path in host_files:
+        for path in blocked_paths:
             try:
                 self.append_setting(box, "ClosedFilePath", path)
             except subprocess.CalledProcessError:
