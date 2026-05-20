@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# runtime files — contain plaintext passwords, never commit
+config.json
+accounts.txt
+account.txt
+fail.txt
+data/accounts.txt
+data/account.txt
+data/fail.txt
+# tangkap variasi tipo lain agar tidak pernah ter-commit
+*account*.txt
+!data/accounts.example.txt
+!accounts.example.txt

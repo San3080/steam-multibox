@@ -1,0 +1,7 @@
+# Satu akun per baris. Pemisah username/password bisa pakai koma ATAU pipe:
+#   username,password
+#   username|password
+# Baris kosong dan baris diawali '#' diabaikan.
+# Salin file ini menjadi data/accounts.txt lalu isi akun Anda.
+contoh_user1,contoh_password1
+contoh_user2|contoh_password2

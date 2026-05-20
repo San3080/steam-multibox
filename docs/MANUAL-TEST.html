@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Manual Integration Test — Steam Multi-Box</title>
+<style>
+  :root{--accent:#1f6aa5;--text:#1a1a1a;--muted:#5a5a5a;}
+  *{box-sizing:border-box}
+  body{font-family:'Segoe UI',system-ui,sans-serif;max-width:880px;margin:32px auto;
+       padding:0 22px 80px;color:var(--text);line-height:1.6;}
+  h1{border-bottom:3px solid var(--accent);padding-bottom:6px;color:var(--accent);
+     margin-top:0;font-size:26px;}
+  h2{margin-top:34px;color:#222;border-left:4px solid var(--accent);
+     padding-left:10px;font-size:19px;}
+  p,li{font-size:14.5px;}
+  code{background:#f1f1f1;padding:2px 6px;border-radius:4px;
+       font-family:Consolas,monospace;font-size:13px;}
+  strong{color:var(--accent);}
+  .item{display:flex;align-items:flex-start;gap:10px;padding:6px 0;
+        border-bottom:1px dashed #eaeaea;}
+  .item input{margin-top:4px;transform:scale(1.2);cursor:pointer;flex:none;}
+  .item label{cursor:pointer;flex:1;font-size:13.5px;}
+  .item input:checked + label{color:#888;text-decoration:line-through;}
+  .reset{margin-top:20px;padding:8px 16px;background:#eee;border:1px solid #ccc;
+         border-radius:4px;cursor:pointer;font-family:inherit;font-size:13px;}
+  .reset:hover{background:#ddd;}
+  .progress{margin-top:18px;font-size:13px;color:var(--muted);}
+  nav.crumbs{font-size:13px;color:var(--muted);margin-bottom:14px;}
+  nav.crumbs a{margin-right:6px;}
+  .info{background:#e3f2fd;border-left:4px solid #1f6aa5;padding:10px 14px;
+        margin:14px 0;border-radius:0 6px 6px 0;font-size:13.5px;}
+</style>
+</head>
+<body>
+
+<nav class="crumbs">
+  <a href="README.html">README</a> ·
+  <a href="USAGE.html">Tata Cara Pakai</a> ·
+  <a href="HANDOFF.html">Handoff</a> ·
+  <a href="MANUAL-TEST.html"><strong>Manual Test</strong></a>
+</nav>
+
+<h1>Manual Integration Test</h1>
+
+<p>Daftar checklist verifikasi end-to-end. Lakukan dengan <strong>1 akun</strong>
+dulu sebelum memakai banyak akun. Centang tiap langkah saat sudah dilakukan;
+status tersimpan di browser-localStorage, jadi tab boleh ditutup/dibuka ulang.</p>
+
+<div class="info">Bagian setup tidak perlu diulang &mdash; sekali sukses, fokus pada
+bagian fitur baru saat tool di-update.</div>
+
+<h2>A. Persiapan</h2>
+<div class="item"><input type="checkbox" id="p1"><label for="p1">Sandboxie (Classic/Plus) terinstal &amp; service <code>SbieSvc</code> RUNNING.</label></div>
+<div class="item"><input type="checkbox" id="p2"><label for="p2">Steam terinstal.</label></div>
+<div class="item"><input type="checkbox" id="p3"><label for="p3">Python 3.10+ terinstal &amp; <code>pip install -r requirements.txt</code> sukses.</label></div>
+<div class="item"><input type="checkbox" id="p4"><label for="p4"><code>data/accounts.txt</code> berisi minimal 1 akun valid milik sendiri.</label></div>
+
+<h2>B. Startup &amp; Auto-Detect</h2>
+<div class="item"><input type="checkbox" id="b1"><label for="b1"><code>python app.py</code> &mdash; jendela terbuka dengan tema gelap.</label></div>
+<div class="item"><input type="checkbox" id="b2"><label for="b2">Log menampilkan: "Sandboxie: pesan non-fatal di-silence global." + "N akun dimuat".</label></div>
+<div class="item"><input type="checkbox" id="b3"><label for="b3">Tidak ada baris merah "Sandboxie/Steam belum terdeteksi". Jika ada: buka Pengaturan &gt; Auto Find.</label></div>
+<div class="item"><input type="checkbox" id="b4"><label for="b4">Pengaturan: tombol <strong>Auto Find</strong> berhasil mengisi path Sandboxie &amp; Steam.</label></div>
+<div class="item"><input type="checkbox" id="b5"><label for="b5">Pengaturan: tombol <strong>Browse...</strong> bisa pilih folder/file manual.</label></div>
+
+<h2>C. Create &amp; Run</h2>
+<div class="item"><input type="checkbox" id="c1"><label for="c1"><strong>Create Boxes</strong> &mdash; log "box siap" untuk tiap akun; box muncul di SandMan/SbieCtrl.</label></div>
+<div class="item"><input type="checkbox" id="c2"><label for="c2">SandMan UI otomatis terbuka setelah Create selesai.</label></div>
+<div class="item"><input type="checkbox" id="c3"><label for="c3"><strong>Run Semua</strong> &mdash; kalau Steam host jalan, popup "Steam host terdeteksi" muncul; Yes &rarr; di-kill.</label></div>
+<div class="item"><input type="checkbox" id="c4"><label for="c4">Jendela Steam pop-up di dalam sandbox (cek title di SandMan: ada PID <code>steam.exe</code> di Sandbox &lt;BoxName&gt;).</label></div>
+<div class="item"><input type="checkbox" id="c5"><label for="c5">Tool isi form login otomatis (Remember me dicentang).</label></div>
+<div class="item"><input type="checkbox" id="c6"><label for="c6">Prompt Steam Guard muncul (kalau aktif untuk akun) &mdash; approve manual; tool tidak terminate saat status Tunggu 2FA.</label></div>
+<div class="item"><input type="checkbox" id="c7"><label for="c7">Setelah Healthy, log: <code>healthy via vdf: &lt;user&gt;</code> + <code>login terverifikasi (MostRecent): &lt;user&gt;</code> + <code>RememberPassword=1 disetel</code>.</label></div>
+<div class="item"><input type="checkbox" id="c8"><label for="c8">Auto-terminate (kalau dicentang): log "shutdown graceful Steam (menunggu 12s)…" lalu "auto-terminate setelah sukses".</label></div>
+<div class="item"><input type="checkbox" id="c9"><label for="c9">Akhir: log "selesai: N sukses, M gagal." &amp; Akun gagal tercatat di <code>data/fail.txt</code>.</label></div>
+
+<h2>D. Persistence Auto-Login</h2>
+<div class="item"><input type="checkbox" id="d1"><label for="d1">Buka box manual lewat SandMan (klik kanan box &rarr; Run Sandboxed &rarr; Run from Start Menu &rarr; Steam).</label></div>
+<div class="item"><input type="checkbox" id="d2"><label for="d2">Steam <strong>auto-login</strong> ke akun yang sesuai box, <strong>TANPA</strong> minta password lagi. ✅</label></div>
+<div class="item"><input type="checkbox" id="d3"><label for="d3">Persona yang muncul di kanan-atas Steam = akun yang seharusnya untuk box itu.</label></div>
+
+<h2>E. Verifikasi Akun &amp; Mismatch Recovery</h2>
+<div class="item"><input type="checkbox" id="e1"><label for="e1">Persona name di Steam kadang beda dari AccountName &mdash; tool tetap log "login terverifikasi" karena cocokkan ke AccountName, bukan persona.</label></div>
+<div class="item"><input type="checkbox" id="e2"><label for="e2">(Opsional/sulit dipicu): jika Steam login ke akun lain, log "PERINGATAN: akun aktif lain: X (diharapkan Y)" + tool wipe sesi + retry.</label></div>
+
+<h2>F. Checkbox &amp; Run Tercentang</h2>
+<div class="item"><input type="checkbox" id="f1"><label for="f1">Tiap baris box punya checkbox ☑ di paling kiri; default tercentang.</label></div>
+<div class="item"><input type="checkbox" id="f2"><label for="f2">Uncheck satu baris, klik <strong>Run Tercentang</strong> &mdash; cuma akun yang dicentang yang diproses; log "N akun tidak dicentang &rarr; dilewati".</label></div>
+<div class="item"><input type="checkbox" id="f3"><label for="f3">Tombol <strong>Centang semua</strong> &amp; <strong>Hapus centang</strong> toggle semua sekaligus.</label></div>
+
+<h2>G. Edit Credential per-Baris</h2>
+<div class="item"><input type="checkbox" id="g1"><label for="g1">Klik ✏️ di baris &mdash; dialog Edit Credential terbuka dengan field username + password terisi.</label></div>
+<div class="item"><input type="checkbox" id="g2"><label for="g2">Ubah cuma password &rarr; Save &rarr; popup "akan di-clear lalu login ulang" &rarr; Yes &rarr; tool wipe sesi + relaunch + login sukses.</label></div>
+<div class="item"><input type="checkbox" id="g3"><label for="g3"><code>data/accounts.txt</code> ter-update dengan password baru (baris lain tetap utuh).</label></div>
+<div class="item"><input type="checkbox" id="g4"><label for="g4">Ubah username (rename) &amp; password &rarr; Save &rarr; popup tambahan "Hapus box lama?" muncul.</label></div>
+<div class="item"><input type="checkbox" id="g5"><label for="g5">Yes hapus box lama &rarr; box lama hilang dari SandMan, box baru dibuat &amp; login.</label></div>
+
+<h2>H. Hapus &amp; Stop</h2>
+<div class="item"><input type="checkbox" id="h1"><label for="h1"><strong>Stop / Terminate</strong> menutup Steam tapi data box tetap; controller berhenti dalam &lt;5 detik (tidak menunggu polling habis).</label></div>
+<div class="item"><input type="checkbox" id="h2"><label for="h2"><strong>Hapus Box Terpilih</strong> (klik baris dulu): konfirmasi &rarr; box dihapus dari SandMan.</label></div>
+<div class="item"><input type="checkbox" id="h3"><label for="h3">🗑 per-baris juga konfirmasi &amp; hapus box yang sesuai.</label></div>
+
+<h2>I. Tutup Steam Host &amp; Buka Sandboxie UI</h2>
+<div class="item"><input type="checkbox" id="i1"><label for="i1"><strong>Tutup Steam Host</strong> men-kill semua <code>steam.exe</code>; log "Steam host dimatikan" / "Tidak ada steam.exe yang jalan".</label></div>
+<div class="item"><input type="checkbox" id="i2"><label for="i2"><strong>Buka Sandboxie UI</strong> meluncurkan SandMan/SbieCtrl.</label></div>
+
+<h2>J. Panel Log</h2>
+<div class="item"><input type="checkbox" id="j1"><label for="j1">Teks log bisa diseleksi &amp; di-copy manual (Ctrl+C).</label></div>
+<div class="item"><input type="checkbox" id="j2"><label for="j2">Tombol <strong>Copy All</strong> menyalin seluruh log ke clipboard.</label></div>
+<div class="item"><input type="checkbox" id="j3"><label for="j3">Pesan sukses berwarna hijau, error berwarna merah.</label></div>
+
+<h2>K. Discord Webhook (Opsional)</h2>
+<div class="item"><input type="checkbox" id="k1"><label for="k1">Pengaturan: field "Discord webhook" + tombol <strong>Test</strong> tersedia.</label></div>
+<div class="item"><input type="checkbox" id="k2"><label for="k2">Test dengan URL valid &rarr; popup "Pesan test terkirim" &amp; pesan muncul di Discord channel.</label></div>
+<div class="item"><input type="checkbox" id="k3"><label for="k3">Test dengan URL salah/kosong &rarr; popup menampilkan alasan eksak (HTTP code, network error, dll).</label></div>
+<div class="item"><input type="checkbox" id="k4"><label for="k4">Saat Run Semua: Discord dapat notif "Run dimulai" + tiap akun sukses/gagal + ringkasan akhir.</label></div>
+<div class="item"><input type="checkbox" id="k5"><label for="k5">Saat Edit Credential: Discord dapat notif "Edit credential …" (audit trail).</label></div>
+
+<h2>L. Robustness &amp; Recovery</h2>
+<div class="item"><input type="checkbox" id="l1"><label for="l1">Hapus <code>data/accounts.txt</code> &rarr; restart app &rarr; log error "tidak ada akun yang dimuat" + tombol Run pop-up "Tidak ada akun".</label></div>
+<div class="item"><input type="checkbox" id="l2"><label for="l2">Set webhook URL kosong &rarr; Run tetap jalan, tidak ada notifikasi (tidak error).</label></div>
+<div class="item"><input type="checkbox" id="l3"><label for="l3">Pasang password salah di <code>accounts.txt</code> &rarr; tool deteksi LOGIN_FAILED &rarr; langsung fail tanpa retry (anti rate-limit).</label></div>
+
+<button class="reset" onclick="if(confirm('Reset semua centang?')){
+  document.querySelectorAll('input[type=checkbox]').forEach(c=>{c.checked=false;localStorage.removeItem('manualtest:'+c.id);});
+}">Reset semua centang</button>
+
+<p class="progress">Total checklist: <span id="count-total">0</span> &middot;
+   tercentang: <span id="count-done">0</span> &middot;
+   <span id="pct">0%</span></p>
+
+<script>
+  const boxes = document.querySelectorAll('input[type=checkbox]');
+  function updateCount(){
+    const total = boxes.length;
+    const done = [...boxes].filter(c=>c.checked).length;
+    document.getElementById('count-total').textContent = total;
+    document.getElementById('count-done').textContent = done;
+    document.getElementById('pct').textContent =
+      total ? Math.round(done * 100 / total) + '%' : '0%';
+  }
+  boxes.forEach(c => {
+    c.checked = localStorage.getItem('manualtest:' + c.id) === '1';
+    c.addEventListener('change', () => {
+      localStorage.setItem('manualtest:' + c.id, c.checked ? '1' : '0');
+      updateCount();
+    });
+  });
+  updateCount();
+</script>
+</body>
+</html>

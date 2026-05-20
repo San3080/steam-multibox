@@ -1,0 +1,12 @@
+{
+  "sandboxie_dir": "",
+  "steam_exe": "",
+  "accounts_file": "data/accounts.txt",
+  "box_prefix": "Steam_",
+  "stagger_seconds": 8,
+  "login_method": "cmdline",
+  "auto_terminate_on_success": false,
+  "max_retries": 3,
+  "retry_check_delay": 25,
+  "splash_timeout": 40
+}

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Steam Multi-Box Launcher — README</title>
+<style>
+  :root{--accent:#1f6aa5;--text:#1a1a1a;--muted:#5a5a5a;--bg-code:#1e1e1e;
+        --warn-bg:#fff8d6;--warn-border:#d6a532;--ok-bg:#e8f5e9;--ok-border:#3fb950;
+        --info-bg:#e3f2fd;--info-border:#1f6aa5;}
+  *{box-sizing:border-box}
+  body{font-family:'Segoe UI',system-ui,sans-serif;max-width:880px;margin:32px auto;
+       padding:0 22px 80px;color:var(--text);line-height:1.6;}
+  h1{border-bottom:3px solid var(--accent);padding-bottom:6px;color:var(--accent);
+     margin-top:0;font-size:28px;}
+  h2{margin-top:34px;color:#222;border-left:4px solid var(--accent);
+     padding-left:10px;font-size:21px;}
+  h3{color:#333;margin-top:24px;font-size:16px;}
+  p,li{font-size:14.5px;}
+  code{background:#f1f1f1;padding:2px 6px;border-radius:4px;
+       font-family:Consolas,monospace;font-size:13px;}
+  pre{background:var(--bg-code);color:#e6e6e6;padding:12px 16px;border-radius:6px;
+      overflow:auto;font-size:13px;}
+  pre code{background:transparent;color:inherit;padding:0;}
+  a{color:var(--accent);}
+  .warn,.ok,.info{padding:10px 14px;margin:14px 0;border-left:4px solid;
+                  border-radius:0 6px 6px 0;}
+  .warn{background:var(--warn-bg);border-color:var(--warn-border);}
+  .ok{background:var(--ok-bg);border-color:var(--ok-border);}
+  .info{background:var(--info-bg);border-color:var(--info-border);}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13.5px;}
+  th,td{border:1px solid #ddd;padding:8px 12px;text-align:left;vertical-align:top;}
+  th{background:#f1f1f1;font-weight:600;}
+  .toc{background:#fafafa;border:1px solid #e0e0e0;border-radius:6px;
+       padding:14px 22px;margin:18px 0 28px;}
+  .toc ul{margin:0;padding-left:18px;}
+  .toc li{margin:3px 0;font-size:13.5px;}
+  .kbd{background:#fff;border:1px solid #b4b4b4;border-radius:3px;
+       padding:1px 6px;font-family:Consolas,monospace;font-size:12px;
+       box-shadow:inset 0 -1px 0 #b4b4b4;}
+  nav.crumbs{font-size:13px;color:var(--muted);margin-bottom:14px;}
+  nav.crumbs a{margin-right:6px;}
+</style>
+</head>
+<body>
+
+<nav class="crumbs">
+  <a href="README.html"><strong>README</strong></a> ·
+  <a href="USAGE.html">Tata Cara Pakai</a> ·
+  <a href="HANDOFF.html">Handoff</a> ·
+  <a href="MANUAL-TEST.html">Manual Test</a>
+</nav>
+
+<h1>Steam Multi-Box Launcher</h1>
+
+<p>Aplikasi GUI Windows untuk menjalankan beberapa akun Steam <strong>milik sendiri</strong>
+secara terisolasi di profil Sandboxie, dengan auto-login bergiliran, verifikasi akun,
+auto-save Remember Me, retry pintar, dan notifikasi Discord opsional.</p>
+
+<div class="info">
+<strong>📚 Dokumen lain (semua di folder <code>docs/</code>):</strong>
+<a href="USAGE.html">Tata Cara Pakai (langkah demi langkah)</a> ·
+<a href="HANDOFF.html">Handoff (status & arsitektur)</a> ·
+<a href="MANUAL-TEST.html">Manual Test Checklist</a>
+</div>
+
+<div class="toc">
+<strong>Daftar isi</strong>
+<ul>
+  <li><a href="#prasyarat">Prasyarat</a></li>
+  <li><a href="#instalasi">Instalasi</a></li>
+  <li><a href="#fitur">Fitur Utama</a></li>
+  <li><a href="#quick">Quick Start</a></li>
+  <li><a href="#lokasi">Lokasi File</a></li>
+  <li><a href="#keamanan">Keamanan &amp; Batasan</a></li>
+  <li><a href="#troubleshoot">Troubleshoot Singkat</a></li>
+</ul>
+</div>
+
+<h2 id="prasyarat">Prasyarat</h2>
+<ul>
+  <li><strong>Sandboxie</strong> (Classic atau Plus) terinstal &mdash; unduh dari
+    <a href="https://github.com/sandboxie-plus/Sandboxie">github.com/sandboxie-plus/Sandboxie</a>.
+    Tool mendeteksi otomatis di drive mana pun.</li>
+  <li><strong>Steam</strong> terinstal.</li>
+  <li><strong>Python 3.10+</strong>.</li>
+</ul>
+
+<h2 id="instalasi">Instalasi</h2>
+<pre><code>pip install -r requirements.txt</code></pre>
+<p>Dependensi: <code>customtkinter</code> (GUI), <code>pywinauto</code> (UI automation),
+<code>pytest</code> (test). Selebihnya pakai stdlib.</p>
+
+<h2 id="fitur">Fitur Utama</h2>
+<table>
+  <tr><th>Fitur</th><th>Penjelasan singkat</th></tr>
+  <tr><td>Auto-detect Sandboxie &amp; Steam</td>
+      <td>Pakai registry &amp; service path; juga ada tombol <strong>Auto Find</strong>
+          + <strong>Browse</strong> manual di Pengaturan.</td></tr>
+  <tr><td>Run bergiliran</td>
+      <td>Satu akun selesai login, baru lanjut akun berikutnya. Tidak spam.</td></tr>
+  <tr><td>UI form login + Remember Me</td>
+      <td>Tool isi form login &amp; centang Remember me &rarr; Steam simpan
+          encrypted token &rarr; manual reopen box auto-login.</td></tr>
+  <tr><td>Verifikasi akun via VDF</td>
+      <td>Baca <code>loginusers.vdf</code> di box, cocokkan
+          <code>AccountName</code> + <code>MostRecent="1"</code> dengan akun
+          di <code>accounts.txt</code>. Tahu kalau Steam salah akun.</td></tr>
+  <tr><td>Auto recovery dari mismatch</td>
+      <td>Kalau akun salah login &rarr; wipe sesi + retry sampai
+          <code>max_retries+1</code> kali.</td></tr>
+  <tr><td>Stop interruptible</td>
+      <td>Tombol Stop benar-benar menghentikan controller thread,
+          tidak menunggu polling habis.</td></tr>
+  <tr><td>Checkbox per-baris + Run Tercentang</td>
+      <td>Pilih sebagian akun saja untuk di-Run.</td></tr>
+  <tr><td>Edit Credential per box</td>
+      <td>Tombol ✏️ di tiap baris &rarr; ubah username/password &rarr;
+          tool wipe sesi lama &amp; login ulang. Box lama auto-delete kalau
+          username berubah.</td></tr>
+  <tr><td>Hapus box per baris (🗑) atau sidebar</td>
+      <td>Hapus aman: terminate proses &rarr; <code>delete_sandbox</code> &rarr;
+          edit <code>Sandboxie.ini</code>.</td></tr>
+  <tr><td>Tutup Steam host otomatis</td>
+      <td>Sebelum Run, tool deteksi <code>steam.exe</code> host yang jalan &amp;
+          minta izin tutup (single-instance Steam menghalangi sandbox).</td></tr>
+  <tr><td>Discord webhook (opsional)</td>
+      <td>Notif run mulai, tiap akun sukses/gagal, ringkasan akhir,
+          dan edit credential.</td></tr>
+</table>
+
+<h2 id="quick">Quick Start</h2>
+
+<p>Lihat <a href="USAGE.html">Tata Cara Pakai</a> untuk panduan langkah demi langkah
+yang detail. Ringkasnya:</p>
+
+<ol>
+  <li>Salin <code>data/accounts.example.txt</code> menjadi <code>data/accounts.txt</code>,
+    isi dengan format <code>username,password</code> (atau <code>username|password</code>),
+    satu akun per baris.</li>
+  <li>Jalankan: <code>python app.py</code></li>
+  <li>Klik <strong>Pengaturan</strong>; pastikan path Sandboxie &amp; Steam terisi
+    (kalau tidak: klik <strong>Auto Find</strong> atau <strong>Browse</strong>).</li>
+  <li>Klik <strong>Run Semua</strong>. Kalau muncul "Steam host terdeteksi", pilih
+    <strong>Yes</strong>.</li>
+  <li>Approve prompt Steam Guard 2FA manual di tiap jendela Steam yang muncul
+    (kalau aktif untuk akun tersebut).</li>
+  <li>Setelah selesai: buka box manual via SandMan &rarr; Steam akan auto-login
+    ke akun yang sesuai box.</li>
+</ol>
+
+<h2 id="lokasi">Lokasi File</h2>
+<p>Semua data milik pengguna ada di folder <code>data/</code> di samping
+<code>app.py</code>, supaya mudah dicari dan di-backup:</p>
+<ul>
+  <li><code>data/accounts.txt</code> &mdash; daftar kredensial (yang Anda isi).</li>
+  <li><code>data/accounts.example.txt</code> &mdash; contoh format.</li>
+  <li><code>data/fail.txt</code> &mdash; ditulis otomatis tiap Run untuk akun gagal,
+    format <code>username,password &nbsp;# alasan</code>.</li>
+  <li><code>config.json</code> &mdash; preferensi tool (paths, delays, webhook URL).</li>
+</ul>
+<p>Lokasi <code>data/accounts.txt</code> bisa dipindah lewat
+<strong>Pengaturan &gt; Browse</strong>; <code>fail.txt</code> mengikuti folder yang sama.</p>
+
+<h2 id="keamanan">Keamanan &amp; Batasan</h2>
+<div class="warn">
+<strong>⚠️ Penting:</strong> <code>data/accounts.txt</code> dan <code>data/fail.txt</code>
+menyimpan password dalam <strong>teks biasa</strong>. Batasi izin akses folder
+<code>data/</code> (NTFS permission). Folder <code>data/</code> &amp; file di dalamnya
+sudah masuk <code>.gitignore</code>.
+</div>
+<p><strong>Batasan tool ini (sengaja):</strong></p>
+<ul>
+  <li>Tidak men-generate kode Steam Guard 2FA. User approve manual via HP/email.</li>
+  <li>Tidak menyimpan <code>shared_secret</code> / maFile.</li>
+  <li>Tidak membuat akun Steam.</li>
+  <li>Hanya untuk akun milik sendiri (keluarga, akun alt pribadi, testing).</li>
+</ul>
+
+<h2 id="troubleshoot">Troubleshoot Singkat</h2>
+<table>
+  <tr><th>Gejala</th><th>Cek dulu</th></tr>
+  <tr><td>"Sandboxie/Steam belum terdeteksi"</td>
+      <td>Pengaturan &rarr; <strong>Auto Find</strong>, atau <strong>Browse</strong>
+          manual ke folder Sandboxie (yang berisi <code>Start.exe</code>) dan
+          <code>steam.exe</code>.</td></tr>
+  <tr><td>Akun "ngikut" Steam host</td>
+      <td>Klik <strong>Tutup Steam Host</strong> di sidebar sebelum Run.</td></tr>
+  <tr><td>"Too Many Retries" dari Steam</td>
+      <td>Tunggu 5-30 menit (cooldown rate-limit Steam). Tool sudah punya
+          deteksi rate-limit dan tidak retry membabi-buta.</td></tr>
+  <tr><td>Box di-create tapi tidak kelihatan di SandMan</td>
+      <td>Tutup &amp; buka kembali SandMan, atau klik View &rarr; Refresh.</td></tr>
+  <tr><td>Manual reopen box minta login lagi</td>
+      <td>Pastikan <code>login_method=ui</code> (default) di config &mdash; itu
+          yang centang Remember me &amp; bikin token tersimpan.</td></tr>
+  <tr><td>Discord Test gagal</td>
+      <td>Pop-up sekarang menampilkan kode HTTP / error eksak. Cek URL webhook
+          (harus diawali <code>https://discord.com/api/webhooks/...</code>).</td></tr>
+</table>
+
+<p style="margin-top:40px;font-size:13px;color:var(--muted);">
+Detail lengkap: <a href="USAGE.html">Tata Cara Pakai</a> ·
+<a href="HANDOFF.html">Handoff</a> ·
+<a href="MANUAL-TEST.html">Manual Test</a></p>
+
+</body>
+</html>
