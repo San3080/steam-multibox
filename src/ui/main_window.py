@@ -133,15 +133,17 @@ class MainWindow(ctk.CTk):
             self.config_obj.accounts_file = "data/accounts.txt"
             save_config(self.config_obj, self.config_path)
 
-        # Migrasi: kalau config lama pakai 'ui' (eksperimen yang gagal di
-        # Steam Chromium client), kembalikan ke 'cmdline'. Karena akses ke
-        # host vdf sudah di-block via ClosedFilePath, -login sekarang langsung
-        # bekerja tanpa picker muncul.
-        if self.config_obj.login_method == "ui":
+        # Migrasi: 'ui' dan 'cmdline' tidak men-save ssfn token yang dibutuhkan
+        # untuk auto-login saat reopen manual. 'keyboard' (default baru) kirim
+        # keystroke ke form login dengan Remember me dicentang -> Steam menulis
+        # ssfn + encrypted token, sehingga reopen box langsung auto-login.
+        if self.config_obj.login_method in ("ui", "cmdline"):
+            old = self.config_obj.login_method
             self.logbus.log(
-                "login_method 'ui' dialihkan ke 'cmdline' (lebih reliable "
-                "dengan ClosedFilePath aktif).", "", "info")
-            self.config_obj.login_method = "cmdline"
+                f"login_method '{old}' dialihkan ke 'keyboard' "
+                "(auto-centang Remember me; auto-save ssfn token).",
+                "", "info")
+            self.config_obj.login_method = "keyboard"
             save_config(self.config_obj, self.config_path)
 
         accounts, errors = read_accounts(self.config_obj.accounts_file)

@@ -201,3 +201,24 @@ def test_enable_remember_password_no_vdf(tmp_path):
 def test_enable_remember_password_no_box_root():
     from src.login_verify import enable_remember_password
     assert enable_remember_password("") is False
+
+
+def test_has_ssfn_token_finds_file(tmp_path):
+    from src.login_verify import has_ssfn_token
+    steam_dir = tmp_path / "drive" / "C" / "Program Files (x86)" / "Steam"
+    steam_dir.mkdir(parents=True)
+    (steam_dir / "ssfn1234567890").write_text("x")
+    assert has_ssfn_token(str(tmp_path)) is True
+
+
+def test_has_ssfn_token_false_without_file(tmp_path):
+    from src.login_verify import has_ssfn_token
+    cfg = tmp_path / "drive" / "C" / "Program Files (x86)" / "Steam" / "config"
+    cfg.mkdir(parents=True)
+    assert has_ssfn_token(str(tmp_path)) is False
+
+
+def test_has_ssfn_token_no_root():
+    from src.login_verify import has_ssfn_token
+    assert has_ssfn_token("") is False
+    assert has_ssfn_token("/nonexistent/dir") is False

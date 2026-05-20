@@ -159,6 +159,23 @@ def verify_login(box: str, expected_username: str) -> tuple[bool | None, str]:
     return None, "loginusers.vdf ada tapi belum berisi akun"
 
 
+def has_ssfn_token(box_root: str) -> bool:
+    """True jika box punya file ssfn* — penanda Steam Guard sentry tersimpan.
+
+    Tanpa ssfn, manual reopen box akan minta login ulang (Steam anggap device
+    baru). ssfn cuma ditulis Steam saat user sign-in lewat UI form dengan
+    Remember me dicentang.
+    """
+    if not box_root or not os.path.isdir(box_root):
+        return False
+    for sub in _STEAM_CONFIG_SUBPATHS:
+        steam_dir = os.path.dirname(os.path.dirname(
+            os.path.join(box_root, sub)))
+        if glob.glob(os.path.join(steam_dir, "ssfn*")):
+            return True
+    return False
+
+
 def enable_remember_password(box_root: str) -> bool:
     """Ubah semua RememberPassword '0' menjadi '1' di loginusers.vdf box.
 
