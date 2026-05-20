@@ -8,7 +8,7 @@ retry pintar, dan notifikasi Discord opsional.
 > [README](docs/README.html) · [Tata Cara Pakai](docs/USAGE.html) · [Handoff](docs/HANDOFF.html) · [Manual Test](docs/MANUAL-TEST.html)
 >
 > GitHub tidak render HTML inline — unduh repo lalu buka file `docs/*.html` di Chrome
-> untuk tampilan lengkap. Atau pakai [htmlpreview.github.io](https://htmlpreview.github.io/?https://github.com/hasanmaulana2509/steam-multibox/blob/main/docs/README.html).
+> untuk tampilan lengkap. Atau pakai [htmlpreview.github.io](https://htmlpreview.github.io/?https://github.com/San3080/steam-multibox/blob/main/docs/README.html).
 
 ---
 
@@ -21,7 +21,7 @@ retry pintar, dan notifikasi Discord opsional.
 ## Instalasi
 
 ```bash
-git clone https://github.com/hasanmaulana2509/steam-multibox.git
+git clone https://github.com/San3080/steam-multibox.git
 cd steam-multibox
 pip install -r requirements.txt
 ```
