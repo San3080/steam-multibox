@@ -1,24 +1,26 @@
 # Steam Multi-Box Launcher
 
-Aplikasi GUI Windows untuk menjalankan beberapa akun Steam **milik sendiri** secara terisolasi
-di profil Sandboxie, dengan auto-login bergiliran, verifikasi akun, auto-save Remember Me,
-retry pintar, dan notifikasi Discord opsional.
+A Windows GUI app for running **multiple personal Steam accounts** in isolated
+Sandboxie profiles, with sequential auto-login, per-account verification,
+persistent Remember Me, smart retry on mismatch, and optional Discord notifications.
 
-> 📚 **Dokumentasi lengkap (HTML) ada di folder [`docs/`](docs)**:
-> [README](docs/README.html) · [Tata Cara Pakai](docs/USAGE.html) · [Handoff](docs/HANDOFF.html) · [Manual Test](docs/MANUAL-TEST.html)
+> 📚 **Full documentation (HTML) lives in [`docs/`](docs)**:
+> [README](docs/README.html) · [Usage Guide](docs/USAGE.html) · [Handoff](docs/HANDOFF.html) · [Manual Test](docs/MANUAL-TEST.html)
 >
-> GitHub tidak render HTML inline — unduh repo lalu buka file `docs/*.html` di Chrome
-> untuk tampilan lengkap. Atau pakai [htmlpreview.github.io](https://htmlpreview.github.io/?https://github.com/San3080/steam-multibox/blob/main/docs/README.html).
+> GitHub does not render HTML inline — clone the repo and open `docs/*.html` in
+> Chrome for the full styled view. Or use
+> [htmlpreview.github.io](https://htmlpreview.github.io/?https://github.com/San3080/steam-multibox/blob/main/docs/README.html).
 
 ---
 
-## Prasyarat
+## Prerequisites
 
-- **Sandboxie** (Classic atau Plus) — [github.com/sandboxie-plus/Sandboxie](https://github.com/sandboxie-plus/Sandboxie)
-- **Steam** terinstal
+- **Sandboxie** (Classic or Plus) — get it from
+  [github.com/sandboxie-plus/Sandboxie](https://github.com/sandboxie-plus/Sandboxie)
+- **Steam** installed
 - **Python 3.10+**
 
-## Instalasi
+## Installation
 
 ```bash
 git clone https://github.com/San3080/steam-multibox.git
@@ -28,52 +30,59 @@ pip install -r requirements.txt
 
 ## Quick Start
 
-1. Salin `data/accounts.example.txt` jadi `data/accounts.txt`, isi
-   `username,password` (atau `username|password`) — satu akun per baris.
-2. Jalankan: `python app.py`
-3. **Pengaturan** → pastikan path Sandboxie & Steam terisi (klik **Auto Find** kalau tidak).
-4. Klik **Run Semua**. Tool akan minta menutup Steam host kalau jalan → **Yes**.
-5. Approve prompt Steam Guard 2FA manual di tiap jendela Steam yang muncul.
-6. Setelah selesai → buka box manual via SandMan → Steam **auto-login** ke akun yang sesuai.
+1. Copy `data/accounts.example.txt` to `data/accounts.txt`, fill it with
+   `username,password` (or `username|password`) — one account per line.
+2. Run: `python app.py`
+3. Click **Pengaturan** (Settings) → make sure Sandboxie & Steam paths are filled
+   (click **Auto Find** if not).
+4. Click **Run Semua** (Run All). If a popup asks to close host Steam → **Yes**.
+5. Approve the Steam Guard 2FA prompt manually in each Steam window that appears
+   (if 2FA is enabled for that account).
+6. After completion → open the box manually via SandMan → Steam **auto-logs in**
+   to the account assigned to that box.
 
-Detail lengkap: [docs/USAGE.html](docs/USAGE.html).
+Step-by-step details: [docs/USAGE.html](docs/USAGE.html).
 
-## Fitur Utama
+## Key Features
 
-| Fitur | Penjelasan |
+| Feature | What it does |
 |---|---|
-| Auto-detect Sandboxie & Steam | Registry + service path + scan semua drive |
-| Run bergiliran + Stop interruptible | Tidak spam, controller bisa dihentikan cepat |
-| UI form login + Remember Me | Token tersimpan → manual reopen box auto-login |
-| Verifikasi akun via VDF | Baca `loginusers.vdf` + cek `MostRecent` → cocokkan ke `accounts.txt` |
-| Auto recovery mismatch | Akun salah login → wipe sesi + retry sampai `max_retries+1` |
-| Run Tercentang | Checkbox per-baris untuk subset akun |
-| Edit Credential per box | ✏️ ubah username/password → wipe + relaunch otomatis |
-| Hapus box aman | terminate → `delete_sandbox` → edit `Sandboxie.ini` |
-| Tutup Steam host pre-Run | Mencegah konflik single-instance Steam |
-| Silence Sandboxie popup | 16 kode SBIE non-fatal di-set di `[GlobalSettings]` |
-| Discord webhook (opsional) | Notif run start/done, login sukses/gagal, edit credential |
+| Auto-detect Sandboxie & Steam | Registry + service path + scan of all drives |
+| Sequential Run + interruptible Stop | No spam, controller stops within ~5s |
+| UI form login + Remember Me | Token persists → manual reopen of the box auto-logs in |
+| VDF-based account verification | Reads `loginusers.vdf` + checks `MostRecent` against `accounts.txt` |
+| Mismatch auto-recovery | If the wrong account logged in → wipe session + retry up to `max_retries+1` |
+| Per-row checkbox + Run Tercentang | Run only the accounts you check |
+| Per-box Edit Credential | ✏️ change username/password → wipe + relaunch automatically |
+| Safe box delete | terminate → `delete_sandbox` → edit `Sandboxie.ini` |
+| Kill host Steam pre-Run | Prevents single-instance Steam from hijacking the sandbox launch |
+| Silence Sandboxie popups | 16 non-fatal SBIE codes hidden via `[GlobalSettings]` |
+| Discord webhook (optional) | Notifies on run start/done, login success/failure, edit credential |
 
-## Keamanan
+## Security
 
-⚠️ `data/accounts.txt` & `data/fail.txt` berisi password **teks biasa**. Batasi izin
-akses folder `data/` (NTFS permission). Keduanya sudah masuk `.gitignore`.
+⚠️ `data/accounts.txt` and `data/fail.txt` store passwords in **plain text**.
+Restrict NTFS access to the `data/` folder. Both are already in `.gitignore`.
 
-## Batasan (sengaja)
+## Scope (intentional limits)
 
-- Tidak men-generate kode Steam Guard 2FA — user approve manual.
-- Tidak menyimpan `shared_secret` / maFile.
-- Tidak membuat akun Steam.
-- Hanya untuk akun milik sendiri (keluarga, akun alt pribadi, testing).
+- Does **not** generate Steam Guard 2FA codes — user approves manually.
+- Does **not** store `shared_secret` / maFile.
+- Does **not** create Steam accounts.
+- For accounts **you own** only (family, personal alts, testing).
+
+Use that respects the Steam Subscriber Agreement is your responsibility — the tool
+won't help with account farming, manipulation, or anything else that violates the
+SSA.
 
 ## Tech Stack
 
 Python 3.10+ · CustomTkinter (GUI) · pywinauto (UI automation) · pytest · Sandboxie CLI.
 
-**130 unit test** untuk semua modul pure-logic (config, accounts, detect, monitor,
-controller, login_verify, sandboxie, host_steam, discord_webhook).
+**130 unit tests** covering all pure-logic modules (config, accounts, detect,
+monitor, controller, login_verify, sandboxie, host_steam, discord_webhook).
 
-## Struktur Proyek
+## Project Structure
 
 ```
 .
@@ -98,13 +107,15 @@ controller, login_verify, sandboxie, host_steam, discord_webhook).
 │       ├── log_panel.py
 │       ├── settings_dialog.py
 │       └── edit_credential_dialog.py
-├── tests/                  pytest (130 tests)
+├── tests/                  pytest suite (130 tests)
 ├── data/                   accounts.txt + fail.txt (gitignored)
-└── docs/                   Dokumentasi HTML lengkap
+└── docs/                   Full HTML documentation
 ```
 
-## Lisensi & Disclaimer
+## License & Disclaimer
 
-Tool ini dibuat untuk pemakaian pribadi — mengelola akun Steam **yang kamu miliki sendiri**
-(akun keluarga, akun alt pribadi, akun testing). Pemakaian melanggar Steam Subscriber Agreement
-(account farming, manipulation, botting) bukan tanggung jawab tool ini maupun penulisnya.
+This tool is for personal use — managing Steam accounts **you own** (family
+accounts, personal alts, testing accounts). Using it in ways that violate the
+[Steam Subscriber Agreement](https://store.steampowered.com/subscriber_agreement/)
+(account farming, manipulation, automated playing, etc.) is **not the
+responsibility** of this tool or its author.
