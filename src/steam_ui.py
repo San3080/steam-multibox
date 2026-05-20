@@ -24,6 +24,51 @@ def _connect_desktop():
     return Desktop(backend="uia")
 
 
+def _probe_steam_window_content(debug_log=None) -> str:
+    """Baca teks descendant control di jendela Steam.
+
+    Title bar Steam pakai Chromium dan biasanya cuma "Steam" — teks distinctive
+    ("Who's playing?", "Sign in to Steam", error message, dll.) ada di control
+    children, bukan di title bar. Fungsi ini meng-enumerate teks tersebut.
+
+    Kembalikan string gabungan (lowercase), atau "" jika gagal.
+    """
+    try:
+        desktop = _connect_desktop()
+    except Exception:
+        return ""
+    parts: list[str] = []
+    try:
+        for win in desktop.windows():
+            try:
+                title = (win.window_text() or "").lower()
+            except Exception:
+                continue
+            # Hanya probe jendela yang title-nya mengandung "steam" — hindari
+            # spam descendants ke seluruh jendela desktop yang lambat.
+            if "steam" not in title:
+                continue
+            try:
+                for ctrl in win.descendants():
+                    try:
+                        t = (ctrl.window_text() or "").strip()
+                    except Exception:
+                        continue
+                    if t and len(t) < 200:
+                        parts.append(t)
+                    if len(parts) > 80:
+                        break  # batas keras agar tidak hang di window besar
+            except Exception:
+                continue
+    except Exception:
+        return ""
+    if debug_log and parts:
+        # tampilkan sampel teks yang ditemukan agar mudah debug saat selector miss
+        sample = [p for p in parts if len(p) < 60][:6]
+        debug_log(f"steam window content sample: {sample}")
+    return " | ".join(parts).lower()
+
+
 def snapshot_box(box: str, elapsed: float, debug_log=None,
                  expected_username: str | None = None) -> WindowSnapshot:
     """Bangun WindowSnapshot dari jendela Steam DI DALAM box Sandboxie.
@@ -84,9 +129,16 @@ def snapshot_box(box: str, elapsed: float, debug_log=None,
 
     texts = " | ".join(analyzed).lower()
 
+    # Probing isi jendela Steam: title Steam pakai Chromium — kontennya
+    # ("Who's playing?", "Sign in", "Steam Guard", dll) BUKAN di title bar
+    # melainkan di descendant control. Kita merge teks itu ke `texts`.
+    content_text = _probe_steam_window_content(debug_log=debug_log)
+    if content_text:
+        texts = texts + " | " + content_text
+
     if "sign in to steam" in texts:
         snap.login_form = True
-    if "who's playing" in texts:
+    if "who's playing" in texts or "sign in to a different account" in texts:
         snap.account_picker = True
     if "steam guard" in texts:
         snap.guard_prompt = True
